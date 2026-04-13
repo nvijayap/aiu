@@ -1,1 +1,2 @@
 # aiu
+AI - LLM, RAG
