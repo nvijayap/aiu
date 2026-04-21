@@ -1,4 +1,4 @@
-/*
+/*----------------------------------------------------------------------------------
 
 Yes, the Agent-to-Agent (A2A) protocol is considered one of the latest and
 most significant approaches to agentic AI, specifically focusing on
@@ -20,13 +20,13 @@ Here is an analysis of A2A in the context of the latest agentic AI trends:
 	from different vendors (e.g., Salesforce, SAP, Google)
 	interact directly.
 
-  . Move to Production: 
-	
+  . Move to Production:
+
 	A2A addresses the shift from pilot projects to enterprise-level,
 	production-ready, multi-agent systems that cross application boundaries.
 
   . Protocol-Based Collaboration:
-  
+
     A2A is an open-source, vendor-neutral protocol that enables agents to
 	discover each other, negotiate tasks, and hand off work securely using
 	web standards like JSON-RPC and HTTP.
@@ -34,7 +34,7 @@ Here is an analysis of A2A in the context of the latest agentic AI trends:
 A2A vs. Other "Latest" Approaches
 
 A2A is often confused with or used alongside
-other modern agentic developments: 
+other modern agentic developments:
 
 A2A (Agent-to-Agent): Focuses on collaboration between agents
 (e.g., a "recruiter" agent talking to a "scheduler" agent).
@@ -63,13 +63,13 @@ it is still developing, and widespread production examples are emerging.
 
 Challenges: As A2A connects more agents, it creates complex, un-ordered, and
 potentially "tangled" webs of interconnections, creating a need for robust
-governance and monitoring. 
+governance and monitoring.
 
 In summary, A2A is not just a tool but a standardized communication protocol
 that is currently leading the push toward a more collaborative and
 interoperable "Internet of Agents" in 2025-2026.
 
-The Agent-to-Agent (A2A) protocol is widely considered one of the latest and 
+The Agent-to-Agent (A2A) protocol is widely considered one of the latest and
 most representative approaches to enabling multi-agent collaboration.
 
 Introduced by Google in April 2025, it serves as an open-standard communication
@@ -102,7 +102,9 @@ and Server-Sent Events (SSE) to ease enterprise adoption.
 A2A vs. MCP (The "Talk" vs. "Do" Distinction)
 
 A2A is frequently paired with Anthropic's Model Context Protocol (MCP),
-which was released in late 2024. They address different layers of the agentic stack:
+which was released in late 2024.
+
+They address different layers of the agentic stack:
 
 MCP (Context/Execution): Acts like a "universal adapter" (USB-C for AI)
 to connect agents to data sources, local files, and external tools.
@@ -120,13 +122,104 @@ While A2A is a leading approach, some industry experts view it as a "bridge"
 to the "Internet of Agents", though it faces ongoing challenges regarding complex
 security implementations and resource efficiency in edge computing environments.
 
-*/
+----------------------------------------------------------------------------------*/
 
 package main
 
-import "fmt"
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
 
+	"github.com/ollama/ollama/api"
+)
+
+// main
 func main() {
 
-	fmt.Printf("\n\tin main() of aiu/a2a\n\n")
+	args := os.Args
+	l := len(args)
+	if l != 2 {
+		fmt.Printf("\n\tNeed city name as arg\n\n")
+		return
+	}
+	city := os.Args[1]
+	fmt.Println("city:", city)
+
+	log.Println("Setting up the client from environment")
+	client, err := api.ClientFromEnvironment()
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	fmt.Println("client:", client)
+
+	log.Println("Defining the tool for Ollama")
+	toolPropertiesMap := api.NewToolPropertiesMap()
+	toolPropertiesMap.Set(
+		"location", 
+		api.ToolProperty{
+			// Type: "",
+			Description: "Name of city like 'San Jose'",
+		},
+	)
+
+	weatherTool := api.Tool{
+		Type: "function",
+		Function: api.ToolFunction{
+			Name:        "get_weather",
+			Description: "Get the current weather for a city",
+			Parameters: api.ToolFunctionParameters {
+				Type: "string",
+				Properties: toolPropertiesMap,
+			},
+		},
+	}
+
+	log.Println("Initial request with model that supports tools")
+	req := &api.ChatRequest{
+		Model:    "llama3.1",
+		Messages: []api.Message{{Role: "user", Content: "Weather in Berlin?"}},
+		Tools:    []api.Tool{weatherTool},
+	}
+
+	ctx := context.Background()
+
+	log.Println("Processing tool call and appending result")
+	client.Chat(ctx, req, func(resp api.ChatResponse) error {
+		if len(resp.Message.ToolCalls) > 0 {
+			result := getWeather(city)
+			req.Messages = append(req.Messages, resp.Message)
+			req.Messages = append(req.Messages, api.Message{Role: "tool", Content: result})
+			client.Chat(ctx, req, func(finalResp api.ChatResponse) error {
+				// fmt.Println(finalResp.Message.Content)
+				fmt.Println(result)
+				return errors.New("")
+			})
+		}
+		return nil
+	})
+}
+
+// get weather
+func getWeather(location string) string {
+	// jisnukrsna.world comes under the umbrella mehersys.com (my company)
+	endPoint := "https://jisnukrsna.world:7878/gw"
+	formData := url.Values{
+        "city": {location},
+    }
+	resp, err := http.PostForm(endPoint, formData)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	return string(body)
 }
