@@ -156,7 +156,6 @@ func main() {
 	if err != nil {
 		fmt.Println("err:", err)
 	}
-	fmt.Println("client:", client)
 
 	log.Println("Defining the tool for Ollama")
 	toolPropertiesMap := api.NewToolPropertiesMap()
