@@ -127,7 +127,9 @@ security implementations and resource efficiency in edge computing environments.
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -135,6 +137,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/ollama/ollama/api"
 )
@@ -149,7 +152,7 @@ func main() {
 		return
 	}
 	city := os.Args[1]
-	fmt.Println("city:", city)
+	// fmt.Println("city:", city)
 
 	log.Println("Setting up the client from environment")
 	client, err := api.ClientFromEnvironment()
@@ -220,5 +223,15 @@ func getWeather(location string) string {
 	if err != nil {
 		fmt.Println("err:", err)
 	}
-	return string(body)
+	jsonString := string(body)
+	// fmt.Println("jsonString:", jsonString)
+	jsonString = strings.ReplaceAll(jsonString, "{", fmt.Sprintf(`{"location":"%s",`, location))
+	// fmt.Println("jsonString:", jsonString)
+	body = []byte(jsonString)
+	var formattedJSON bytes.Buffer
+	err = json.Indent(&formattedJSON, body, "", "    ")
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	return formattedJSON.String()
 }
