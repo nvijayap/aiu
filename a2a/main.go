@@ -157,7 +157,7 @@ func main() {
 	log.Println("Setting up the client from environment")
 	client, err := api.ClientFromEnvironment()
 	if err != nil {
-		fmt.Println("err:", err)
+		fmt.Println("main: err1:", err)
 	}
 
 	log.Println("Defining the tool for Ollama")
@@ -216,12 +216,12 @@ func getWeather(location string) string {
     }
 	resp, err := http.PostForm(endPoint, formData)
 	if err != nil {
-		fmt.Println("err:", err)
+		fmt.Println("getWeather: err1:", err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("err:", err)
+		fmt.Println("getWeather: err2:", err)
 	}
 	jsonString := string(body)
 	// fmt.Println("jsonString:", jsonString)
@@ -231,7 +231,7 @@ func getWeather(location string) string {
 	var formattedJSON bytes.Buffer
 	err = json.Indent(&formattedJSON, body, "", "    ")
 	if err != nil {
-		fmt.Println("err:", err)
+		fmt.Println("getWeather: err3:", err)
 	}
 	return formattedJSON.String()
 }
