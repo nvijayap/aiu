@@ -207,6 +207,7 @@ func main() {
 		return nil
 	})
 
+	singleLine = strings.ReplaceAll(singleLine, "Please note that", "\n Please note that")
 	singleLine = strings.ReplaceAll(singleLine, ". ", ".\n")
 	fmt.Printf("%s\n\n", singleLine)
 }
