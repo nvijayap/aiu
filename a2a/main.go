@@ -209,7 +209,7 @@ func main() {
 
 // get weather
 func getWeather(location string) string {
-	// jisnukrsna.world comes under the umbrella mehersys.com (my company)
+	// jisnukrsna.world comes under the umbrella of mehersys.com (my company)
 	endPoint := "https://jisnukrsna.world:7878/gw"
 	formData := url.Values{
         "city": {location},
