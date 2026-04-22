@@ -130,13 +130,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/ollama/ollama/api"
@@ -152,8 +152,8 @@ func main() {
 		return
 	}
 	city := os.Args[1]
-	// fmt.Println("city:", city)
 
+	fmt.Println()
 	log.Println("Setting up the client from environment")
 	client, err := api.ClientFromEnvironment()
 	if err != nil {
@@ -185,26 +185,30 @@ func main() {
 	log.Println("Initial request with model that supports tools")
 	req := &api.ChatRequest{
 		Model:    "llama3.1",
-		Messages: []api.Message{{Role: "user", Content: "Weather in Berlin?"}},
+		Messages: []api.Message{{Role: "user", Content: fmt.Sprintf("Weather in %s?", city)}},
 		Tools:    []api.Tool{weatherTool},
 	}
 
-	ctx := context.Background()
-
 	log.Println("Processing tool call and appending result")
+	ctx := context.Background()
+	content, singleLine := "", ""
+	re := regexp.MustCompile(`[\n\f\t]+`)
 	client.Chat(ctx, req, func(resp api.ChatResponse) error {
 		if len(resp.Message.ToolCalls) > 0 {
 			result := getWeather(city)
 			req.Messages = append(req.Messages, resp.Message)
 			req.Messages = append(req.Messages, api.Message{Role: "tool", Content: result})
 			client.Chat(ctx, req, func(finalResp api.ChatResponse) error {
-				// fmt.Println(finalResp.Message.Content)
-				fmt.Println(result)
-				return errors.New("")
+				content += finalResp.Message.Content
+				return nil
 			})
 		}
+		singleLine = re.ReplaceAllString(content, " ")
 		return nil
 	})
+
+	singleLine = strings.ReplaceAll(singleLine, ". ", ".\n")
+	fmt.Printf("%s\n\n", singleLine)
 }
 
 // get weather
@@ -233,5 +237,6 @@ func getWeather(location string) string {
 	if err != nil {
 		fmt.Println("getWeather: err3:", err)
 	}
+	fmt.Printf("\nformattedJSON from weather service:\n\n%s\n\n", &formattedJSON)
 	return formattedJSON.String()
 }
