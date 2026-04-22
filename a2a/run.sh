@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cd `dirname $0`
+
 nc -zv 127.0.0.1 11434 >/dev/null 2>&1
 
 [ $? -ne 0 ] && brew services start ollama
@@ -8,4 +10,6 @@ if [ $# -ne 1 ]; then
   printf "\nNeed city name as arg\n\n"; exit 1
 fi
 
-sleep 3; go run main.go "$@"
+sleep 3; go build
+
+./a2a
