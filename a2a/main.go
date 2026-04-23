@@ -210,7 +210,7 @@ func main() {
 
 	// handle the rare intermittent issue
 	for {
-		if singleLine == "" {
+		if strings.TrimSpace(singleLine) == "" {
 			time.Sleep(1000)
 			main()
 		} else {
