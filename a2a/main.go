@@ -138,6 +138,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/ollama/ollama/api"
 )
@@ -206,6 +207,16 @@ func main() {
 		singleLine = re.ReplaceAllString(content, " ")
 		return nil
 	})
+
+	// handle the rare intermittent issue
+	for {
+		if singleLine == "" {
+			time.Sleep(1000)
+			main()
+		} else {
+			break
+		}
+	}
 
 	singleLine = strings.ReplaceAll(singleLine, "Please note that", "\n Please note that")
 	singleLine = strings.ReplaceAll(singleLine, ". ", ".\n")
