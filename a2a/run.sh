@@ -2,6 +2,8 @@
 
 cd `dirname $0`
 
+trap "rm -f a2a" EXIT SIGINT SIGTERM
+
 if [ $# -ne 1 ]; then
   printf "\nNeed city name as arg\n\n"; exit 1
 fi
